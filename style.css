@@ -1,6 +1,6 @@
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: poppins, sans-serif;
     margin: 0;
     background: #f4f6f9;
     color: #222;
@@ -8,7 +8,7 @@ body {
 
 header {
     background: #172554;
-    color: white;
+    color: rgb(252, 199, 199);
     text-align: center;
     padding: 35px 15px;
 }
@@ -27,7 +27,7 @@ section {
 }
 
 h2 {
-    color: #1d4ed8;
+    color: #81da84;
 }
 
 footer {
