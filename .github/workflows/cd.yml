@@ -1,0 +1,54 @@
+name: CD - Deploy to EC2
+
+on:
+  workflow_run:
+    workflows:
+      - "CI - Build & Push Docker Image"
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST_DNS }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+
+            # Install Docker if it is missing
+            if ! command -v docker >/dev/null 2>&1; then
+              sudo apt-get update
+              sudo apt-get install -y docker.io
+            fi
+
+            # Start Docker and enable it at boot
+            sudo systemctl enable --now docker
+
+            # Set image name and commit tag
+            IMAGE="${{ secrets.DOCKER_USERNAME }}/myapp"
+            TAG="${{ github.event.workflow_run.head_sha }}"
+
+            # Pull the new image
+            sudo docker pull "$IMAGE:$TAG"
+
+            # Remove the old container if it exists
+            sudo docker rm -f myapp || true
+
+            # Start the new container
+            sudo docker run -d \
+              --restart always \
+              --name myapp \
+              -p 8080:80 \
+              "$IMAGE:$TAG"
+
+            # Verify deployment
+            sudo docker ps
